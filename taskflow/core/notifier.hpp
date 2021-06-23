@@ -17,6 +17,8 @@
 #include <numeric>
 #include <cassert>
 
+#include <boost/fiber/all.hpp>
+
 // This file is part of Eigen, a lightweight C++ template library
 // for linear algebra.
 //
@@ -70,8 +72,8 @@ class Notifier {
   
   struct Waiter {
     std::atomic<Waiter*> next;
-    std::mutex mu;
-    std::condition_variable cv;
+    boost::fibers::mutex mu;
+    boost::fibers::condition_variable cv;
     uint64_t epoch;
     unsigned state;
     enum {
@@ -112,7 +114,7 @@ class Notifier {
       if (int64_t((state & kEpochMask) - epoch) < 0) {
         // The preceeding waiter has not decided on its fate. Wait until it
         // calls either cancel_wait or commit_wait, or is notified.
-        std::this_thread::yield();
+        boost::this_fiber::yield();
         state = _state.load(std::memory_order_seq_cst);
         continue;
       }
@@ -144,7 +146,7 @@ class Notifier {
       if (int64_t((state & kEpochMask) - epoch) < 0) {
         // The preceeding waiter has not decided on its fate. Wait until it
         // calls either cancel_wait or commit_wait, or is notified.
-        std::this_thread::yield();
+        boost::this_fiber::yield();
         state = _state.load(std::memory_order_relaxed);
         continue;
       }
@@ -237,7 +239,7 @@ class Notifier {
   std::vector<Waiter> _waiters;
 
   void _park(Waiter* w) {
-    std::unique_lock<std::mutex> lock(w->mu);
+    std::unique_lock<boost::fibers::mutex> lock(w->mu);
     while (w->state != Waiter::kSignaled) {
       w->state = Waiter::kWaiting;
       w->cv.wait(lock);
@@ -250,7 +252,7 @@ class Notifier {
       next = w->next.load(std::memory_order_relaxed);
       unsigned state;
       {
-        std::unique_lock<std::mutex> lock(w->mu);
+        std::unique_lock<boost::fibers::mutex> lock(w->mu);
         state = w->state;
         w->state = Waiter::kSignaled;
       }
