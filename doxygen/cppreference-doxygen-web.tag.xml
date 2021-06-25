@@ -2415,7 +2415,7 @@
       <anchor></anchor>
       <arglist>(T... args)</arglist>
     </member>
-    <class kind="class">std::promise</class>
+    <class kind="class">tf::Promise</class>
     <member kind="function">
       <type>T</type>
       <name>merge</name>
@@ -20670,7 +20670,7 @@
     <filename>cpp/locale/messages</filename>
   </compound>
   <compound kind="class">
-    <name>std::promise</name>
+    <name>tf::Promise</name>
     <filename>cpp/thread/promise</filename>
     <member kind="function">
       <type>T</type>

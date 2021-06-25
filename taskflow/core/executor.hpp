@@ -394,7 +394,7 @@ auto Executor::async(F&& f, ArgsT&&... args) {
   using T = std::invoke_result_t<F, ArgsT...>;
   using R = std::conditional_t<std::is_same_v<T, void>, void, std::optional<T>>;
 
-  std::promise<R> p;
+  tf::Promise<R> p;
 
   auto tpg = std::make_shared<AsyncTopology>();
 
@@ -515,7 +515,7 @@ inline void Executor::_explore_task(Worker& w, Node*& t) {
     }
     
     if(num_steals++ > max_steals) {
-      std::this_thread::yield();
+      ::boost::this_fiber::yield();
       if(num_yields++ > 100) {
         break;
       }
@@ -1000,7 +1000,7 @@ inline void Executor::_invoke_dynamic_task_internal(
           goto exploit;
         }
         else if(p->_join_counter != 0){
-          std::this_thread::yield();
+          ::boost::this_fiber::yield();
           w._vtm = rdvtm(w._rdgen);
           goto explore;
         }
@@ -1126,7 +1126,7 @@ tf::Future<void> Executor::run_until(Taskflow& f, P&& pred, C&& c) {
   // Special case of predicate
   if(f.empty() || pred()) {
     c();
-    std::promise<void> promise;
+    tf::Promise<void> promise;
     promise.set_value();
     _decrement_topology_and_notify();
     return tf::Future<void>(promise.get_future(), std::monostate{});
@@ -1343,7 +1343,7 @@ auto Subflow::async(F&& f, ArgsT&&... args) {
   using T = std::invoke_result_t<F, ArgsT...>;
   using R = std::conditional_t<std::is_same_v<T, void>, void, std::optional<T>>;
 
-  std::promise<R> p;
+  tf::Promise<R> p;
 
   auto tpg = std::make_shared<AsyncTopology>();
 

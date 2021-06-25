@@ -419,10 +419,10 @@ inline void Taskflow::_dump(
 
 @brief class to access the result of task execution
 
-tf::Future is a derived class from std::future that will eventually hold the
+tf::Future is a derived class from BaseFuture that will eventually hold the
 execution result of a submitted taskflow (e.g., tf::Executor::run)
 or an asynchronous task (e.g., tf::Executor::async).
-In addition to base methods of std::future,
+In addition to base methods of BaseFuture,
 you can call tf::Future::cancel to cancel the execution of the running taskflow
 associated with this future object.
 The following example cancels a submission of a taskflow that contains
@@ -448,8 +448,9 @@ fu.cancel();
 fu.get();
 @endcode
 */
+
 template <typename T>
-class Future : public std::future<T>  {
+class Future : public BaseFuture<T>  {
 
   friend class Executor;
   friend class Subflow;
@@ -503,13 +504,13 @@ class Future : public std::future<T>  {
     handle_t _handle;
 
     template <typename P>
-    Future(std::future<T>&&, P&&);
+    Future(BaseFuture<T>&&, P&&);
 };
 
 template <typename T>
 template <typename P>
-Future<T>::Future(std::future<T>&& fu, P&& p) :
-  std::future<T> {std::move(fu)},
+Future<T>::Future(BaseFuture<T>&& fu, P&& p) :
+  BaseFuture<T> {std::move(fu)},
   _handle        {std::forward<P>(p)} {
 }
 
